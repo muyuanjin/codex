@@ -14,6 +14,7 @@ use wiremock::ResponseTemplate;
 use wiremock::matchers::method;
 use wiremock::matchers::path_regex;
 
+use crate::RequestBodyExt;
 use crate::test_codex::ApplyPatchModelOutput;
 
 #[derive(Debug, Clone)]
@@ -66,7 +67,7 @@ pub struct ResponsesRequest(wiremock::Request);
 
 impl ResponsesRequest {
     pub fn body_json(&self) -> Value {
-        self.0.body_json().unwrap()
+        self.0.json_body()
     }
 
     /// Returns all `input_text` spans from `message` inputs for the provided role.
@@ -82,7 +83,7 @@ impl ResponsesRequest {
     }
 
     pub fn input(&self) -> Vec<Value> {
-        self.0.body_json::<Value>().unwrap()["input"]
+        self.body_json()["input"]
             .as_array()
             .expect("input array not found in request")
             .clone()

@@ -19,6 +19,7 @@ use codex_core::protocol::ReviewRequest;
 use codex_core::protocol::RolloutItem;
 use codex_core::protocol::RolloutLine;
 use codex_protocol::user_input::UserInput;
+use core_test_support::RequestBodyExt;
 use core_test_support::load_default_config_for_test;
 use core_test_support::load_sse_fixture_with_id_from_str;
 use core_test_support::skip_if_no_network;
@@ -398,7 +399,7 @@ async fn review_uses_custom_review_model_from_config() {
 
     // Assert the request body model equals the configured review model
     let request = &server.received_requests().await.unwrap()[0];
-    let body = request.body_json::<serde_json::Value>().unwrap();
+    let body = request.json_body::<serde_json::Value>();
     assert_eq!(body["model"].as_str().unwrap(), "gpt-5.1");
 
     server.verify().await;
@@ -515,7 +516,7 @@ async fn review_input_isolated_from_parent_history() {
 
     // Assert the request `input` contains the environment context followed by the user review prompt.
     let request = &server.received_requests().await.unwrap()[0];
-    let body = request.body_json::<serde_json::Value>().unwrap();
+    let body = request.json_body::<serde_json::Value>();
     let input = body["input"].as_array().expect("input array");
     assert_eq!(
         input.len(),
@@ -642,7 +643,7 @@ async fn review_history_does_not_leak_into_parent_session() {
     // Critically, no messages from the review thread should appear.
     let requests = server.received_requests().await.unwrap();
     assert_eq!(requests.len(), 2);
-    let body = requests[1].body_json::<serde_json::Value>().unwrap();
+    let body = requests[1].json_body::<serde_json::Value>();
     let input = body["input"].as_array().expect("input array");
 
     // Must include the followup as the last item for this turn

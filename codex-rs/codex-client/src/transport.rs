@@ -1,4 +1,5 @@
 use crate::error::TransportError;
+use crate::request::Body;
 use crate::request::Request;
 use crate::request::Response;
 use async_trait::async_trait;
@@ -45,7 +46,10 @@ impl ReqwestTransport {
             builder = builder.timeout(timeout);
         }
         if let Some(body) = req.body {
-            builder = builder.json(&body);
+            builder = match body {
+                Body::Json(value) => builder.json(&value),
+                Body::Bytes(bytes) => builder.body(bytes),
+            };
         }
         Ok(builder)
     }

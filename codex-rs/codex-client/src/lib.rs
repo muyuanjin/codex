@@ -7,6 +7,7 @@ mod transport;
 
 pub use crate::error::StreamError;
 pub use crate::error::TransportError;
+pub use crate::request::Body;
 pub use crate::request::Request;
 pub use crate::request::Response;
 pub use crate::retry::RetryOn;

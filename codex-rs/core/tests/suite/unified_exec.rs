@@ -305,7 +305,22 @@ async fn unified_exec_respects_workdir_override() -> Result<()> {
 
     let requests = server.received_requests().await.expect("recorded requests");
     assert!(!requests.is_empty(), "expected at least one POST request");
+    let bodies = requests
+        .iter()
+        .map(core_test_support::RequestBodyExt::json_body::<Value>)
+        .collect::<Vec<_>>();
 
+    let outputs = collect_tool_outputs(&bodies)?;
+    let output = outputs
+        .get(call_id)
+        .expect("missing exec_command workdir output");
+    let output_text = output.output.trim();
+    let output_canonical = std::fs::canonicalize(output_text)?;
+    let expected_canonical = std::fs::canonicalize(&workdir)?;
+    assert_eq!(
+        output_canonical, expected_canonical,
+        "pwd should reflect the requested workdir override"
+    );
     Ok(())
 }
 
@@ -858,7 +873,7 @@ async fn exec_command_reports_chunk_and_exit_metadata() -> Result<()> {
 
     let bodies = requests
         .iter()
-        .map(|req| req.body_json::<Value>().expect("request json"))
+        .map(core_test_support::RequestBodyExt::json_body::<Value>)
         .collect::<Vec<_>>();
 
     let outputs = collect_tool_outputs(&bodies)?;
@@ -1091,7 +1106,7 @@ async fn write_stdin_returns_exit_metadata_and_clears_session() -> Result<()> {
 
     let bodies = requests
         .iter()
-        .map(|req| req.body_json::<Value>().expect("request json"))
+        .map(core_test_support::RequestBodyExt::json_body::<Value>)
         .collect::<Vec<_>>();
 
     let outputs = collect_tool_outputs(&bodies)?;
@@ -1339,7 +1354,7 @@ async fn unified_exec_reuses_session_via_stdin() -> Result<()> {
 
     let bodies = requests
         .iter()
-        .map(|req| req.body_json::<Value>().expect("request json"))
+        .map(core_test_support::RequestBodyExt::json_body::<Value>)
         .collect::<Vec<_>>();
 
     let outputs = collect_tool_outputs(&bodies)?;
@@ -1472,7 +1487,7 @@ PY
 
     let bodies = requests
         .iter()
-        .map(|req| req.body_json::<Value>().expect("request json"))
+        .map(core_test_support::RequestBodyExt::json_body::<Value>)
         .collect::<Vec<_>>();
 
     let outputs = collect_tool_outputs(&bodies)?;
@@ -1583,7 +1598,7 @@ async fn unified_exec_timeout_and_followup_poll() -> Result<()> {
 
     let bodies = requests
         .iter()
-        .map(|req| req.body_json::<Value>().expect("request json"))
+        .map(core_test_support::RequestBodyExt::json_body::<Value>)
         .collect::<Vec<_>>();
 
     let outputs = collect_tool_outputs(&bodies)?;
@@ -1671,7 +1686,7 @@ PY
 
     let bodies = requests
         .iter()
-        .map(|req| req.body_json::<Value>().expect("request json"))
+        .map(core_test_support::RequestBodyExt::json_body::<Value>)
         .collect::<Vec<_>>();
 
     let outputs = collect_tool_outputs(&bodies)?;
@@ -1750,7 +1765,7 @@ async fn unified_exec_runs_under_sandbox() -> Result<()> {
 
     let bodies = requests
         .iter()
-        .map(|req| req.body_json::<Value>().expect("request json"))
+        .map(core_test_support::RequestBodyExt::json_body::<Value>)
         .collect::<Vec<_>>();
 
     let outputs = collect_tool_outputs(&bodies)?;
