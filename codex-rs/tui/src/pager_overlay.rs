@@ -750,8 +750,12 @@ mod tests {
 
     #[test]
     fn transcript_overlay_wraps_long_exec_output_lines() {
-        let marker = "Z";
-        let long_line = marker.repeat(200);
+        let long_line = "Z".repeat(200);
+        let command_output = CommandOutput {
+            exit_code: 0,
+            aggregated_output: format!("{long_line}\n"),
+            formatted_output: long_line,
+        };
 
         let mut exec_cell = crate::exec_cell::new_active_exec_command(
             "exec-long".into(),
@@ -763,32 +767,15 @@ mod tests {
             None,
             false,
         );
-        exec_cell.complete_call(
-            "exec-long",
-            CommandOutput {
-                exit_code: 0,
-                aggregated_output: format!("{long_line}\n"),
-                formatted_output: long_line,
-            },
-            Duration::from_millis(10),
-        );
-        let exec_cell: Arc<dyn HistoryCell> = Arc::new(exec_cell);
+        exec_cell.complete_call("exec-long", command_output, Duration::from_millis(10));
 
-        let mut overlay = TranscriptOverlay::new(vec![exec_cell]);
         let area = Rect::new(0, 0, 20, 10);
         let mut buf = Buffer::empty(area);
+        TranscriptOverlay::new(vec![Arc::new(exec_cell) as Arc<dyn HistoryCell>])
+            .render(area, &mut buf);
 
-        overlay.render(area, &mut buf);
-        let rendered = buffer_to_text(&buf, area);
-
-        let wrapped_lines = rendered
-            .lines()
-            .filter(|line| line.contains(marker))
-            .count();
-        assert!(
-            wrapped_lines >= 2,
-            "expected long exec output to wrap into multiple lines in transcript overlay, got:\n{rendered}"
-        );
+        let snapshot = buffer_to_text(&buf, area);
+        assert_snapshot!("transcript_overlay_wraps_long_exec_output_lines", snapshot);
     }
 
     #[test]
